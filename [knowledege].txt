@@ -1,0 +1,267 @@
+[ Java Project-II Primary ]
+
+* IO: 
+	- buffer; 
+	- stream; 
+	- serialize
+	- NIO/BIO
+
+* Multi-Thread: 
+	- volatile; 
+	- synchronize; 
+	- asynchronize; 
+	- start(); 
+	- isAlive(): whether thread is activated
+	- interrupt(): deactivate thread
+	- start(); 
+	- join(): wait other thread
+	- shutdown(): stop receive new task, still execute thread which already in queue
+	- shutdownNow(): 
+	- Thread-safe/Thread-sychronized
+		-- Thread-safe: Vector/HashTable
+		-- Thread-sychronized: Vector/HashTable
+	- Thread Synchronize:
+
+		-- CountDownLatch: thread wait for a series thread
+			  *
+			//|\\
+			|||||	singnal.countDown()
+			\\|//
+			  *		signal.await()
+			  |
+
+		-- CyclicBarrier: thread wait for each other
+			  *
+			//|\\
+			|||||
+			-----	barrier.await()
+			|||||
+
+		-- Phaser: thread synchronize dynamical and in multi-step
+			|||||
+			-----	phaser.arriveAndAwaitAdvance()
+			|||||
+			-----	phaser.arriveAndAwaitAdvance()
+			|||||
+
+
+* JVM: 
+	- Java Memory Structure:
+		|-- Stack
+		|-- Heap
+		|-- Method
+		|-- Program Counter
+
+		WHAT'S THE DIFFERNCE?
+
+			 ___________________________________________________________________
+			|	basic program: Stack (means the execute order, reference order)	|
+			|___________________________________________________________________|
+									|	
+									\/	where to store the data (object)
+		 ___________________________________________________________________________
+		|						An Extra Space 										|
+		|							|												|
+		|				what a mess |how to classify different data  				|
+		|			-----------------------------------------						|
+		|			|	 	   								|						|
+		|		   Heap 								  Method					|
+		|		 	|-- Class Instance						|-- Class 				|		
+		|		 	|-- Arrays								|-- Static Variable		|
+		|___________________________________________________________________________|
+		|		young/old					|			permanent					|
+		|________________________________LifTime____________________________________|
+
+	- Java Memory Model(JMM)
+		WHAT'S THE RELATIONSHIP BETWEEN JMM & JMS?
+			JMM describes the thread and memory state of running Java program;
+			JMS describes the memory components and execute structure.
+
+
+	- classloader; 
+	- GC Mechanism:
+		-- GC Method
+			sweep: 	 +*++**+ _______ -> +_++__+ _______  waste time when search free space
+			compact: +*++**+ _______ -> ++++___ _______  waste time when compact data
+			copy: 	 +*++**+ _______ -> _______ ++++___  waste space
+		-- Full GC Condition
+			MaxDirectMemorySize(NIO direct-buffer) surpassed -> System.gc()
+			Tenured full
+			Perm full/MetaSpace full
+			System.gc()
+	- Command Reorder:
+		origin execute order
+		 _________________ 
+		|				  |
+		| *	code_1		  |
+		| |	code_2		  |
+		| |	code_3		  |
+		| |	code_4		  |
+		| |	...			  |
+		| \/			  |
+		|_________________|
+
+		resorted execute order
+		 _________________ 
+		|				  |
+		| *	code_1		  |
+		| |	code_2		  |
+		| \/			  |
+		|				  |
+		| *	code_3		  |
+		| | code_4		  |
+		| \/			  |
+		| 				  |
+		| *	...		  	  |
+		| |	code_n		  |
+		| |	...			  |
+		| \/			  |
+		|_________________|
+
+* SQL: 
+	- preventing injection-attack: parametric query -> improve security & performance
+
+* Generics: 
+	- <? extends T> read-only, can only get from T and T's fathers.
+	- <? super T> write-only, can only add T and T's child.
+
+* Class:
+	- the initial order of child/father:
+			|  father static variable
+			|  father static code block
+			|  child static variable
+			|  child static code block
+			|  father normal variable
+			|  father normal code block
+			|  father constructor
+			|  child normal variable
+			|  child normal code block
+			\/ child constructor
+		initial order in general:
+			father before child
+			variable before constructor
+			static before normal
+			variable before code block
+	- static method won't be override by child
+
+* cache object/new object: transfer by reference/transfer by value ?
+
+* Security:
+	- Hash Algorithm:
+		MD5: 1991 -> unsecured now
+		SHA.*:
+			SHA1: 1993 -> unsecured now
+			SHA2-256: secured
+			SHA: 	20 byte
+			SHA256: 32 byte
+			SHA384: 48 byte
+			SHA512: 64 byte
+
+* Atomicity: Atomic package
+	- class
+		AtomicIntegerArray
+		AtomicLongArray
+		AtomicReferenceArray
+	- method
+		addAndGet()
+		getAndIncrement()
+		compareAndSet()
+
+* [INSIGHT] Comparing: Similarity between JVM Resort Risk & DataBase ACID 
+	- JVM Resort Risk:
+
+			  Processor A 	     Processor B
+		 write_A| 	  |		  	  |	  	|write_B
+				\/	  |read_A     |	  	\/
+			  Cache A |     read_B|   Cache B
+		commit_A|	  |	  		  |	  	|commit_B
+			  	\/	  \/		  \/  	\/
+			  	 ________________________
+			  	|	    Main Memory	     |
+			    |________________________|
+
+	    -- may cause inconsistency risk:
+	    	|  initial state: a = b = 0
+	    	|  operation:
+	    	|   ____________________________________
+	    	|  |Processor A  	 |Processor B 		|
+	    	|  |  a=1; //write_A |  b=2; //write_B  |
+	    	|  |  x=b; //read_A	 |  y=a; //read_B	|
+	    	|  |_________________|__________________|
+	    	|  final result: x = y = 0
+	    	\/ expect result: x=2, y=1
+
+	    -- solution: happens-before
+	    	e.g.
+	    		commit_A happens-before read_B
+	    		solve the inconsistency problem
+
+	- DataBase ACID:
+
+				Account A 	
+		 	save| 	  |		
+				\/	  |read_A
+			  ATM A   |     
+				|	  |	  	
+			  	|	  |
+			  	|	  |
+			  	|	  |
+			  	|	  |		     Account B
+				|	  |		read_B|	  	|draw
+				|	  |			  |	  	\/
+		commit_A|	  |			  |   ATM B
+				|	  |			  |	  	|commit_B
+				\/	  \/		  \/  	\/	
+			  	 ________________________
+			  	|	       BANK	     	 |
+			    |________________________|
+
+	    -- no ACID will cause inconsistency risk:
+	    	|  initial state: Total=￥1000
+	    	|  operation:
+	    	|   _________________________________________________
+	    	|  |Account A  	 	 		|Account B 				 |
+	    	|  |  save=￥100 	 		|  	    				 |
+	    	|  |  read total=￥1000		|  						 |
+	    	|  |  total += save			|						 |
+	    	|  |  						|						 |
+	    	|  |	  					|	draw=￥100			 |
+	    	|  |	  					|	read total=￥1000	 |
+	    	|  |	  					|	total -= draw	 	 |
+	    	|  |  commit total=￥110	0  	|						 |
+	    	|  |	  					|	commit total=￥900	 |
+	    	|  |________________________|________________________|
+	    	|  final result: total=￥900
+	    	\/ expect result: ￥1000
+
+	    -- solution: 
+
+* [INSIGHT] How to implement a happens-before mechanism ?
+	- personal hypotheses: legal sequence pair check
+	legal sequence pair: 
+		write -> read   Y
+		write -> write 	N
+		read -> read   	N
+
+		--------------------------------------------------------------------------------> Time Line 
+		Thread 1							Thread 2
+			| 	read							| 
+			\/									|
+		 ________ 								|						 ________
+		|Volatile|  							|						|Volatile|  
+		|________|								|read					|________|
+			|	set flag:  						|							/\ read reject
+			\/	read							\/							|
+		-- read -------------------------> |legal check| -------> expected write flag --> Flag Line
+
+
+		--------------------------------------------------------------------------------> Time Line 
+		Thread 1			Thread 1		Thread 2
+			| 	read			|	write		| 
+			\/					\/				|
+		 ________ 			 ________ 			|						 ________
+		|Volatile|  		|Volatile|			|						|Volatile|  
+		|________|			|________|			|read					|________|
+			|	set flag:  		|	set flag: 	|							/\ read accept
+			\/	read			\/	write		\/							|
+		-- read -------------- write ----> |legal check| -------> expected write flag --> Flag Line
